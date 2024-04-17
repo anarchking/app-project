@@ -1,0 +1,345 @@
+
+<DrawerClickableItem@MDNavigationDrawerItem>
+    focus_color: "#e7e4c0"
+    text_color: "#4a4939"
+    icon_color: "#4a4939"
+    ripple_color: "#c5bdd2"
+    selected_color: "#0c6c4d"
+
+
+<DrawerLabelItem@MDNavigationDrawerItem>
+    text_color: "#4a4939"
+    icon_color: "#4a4939"
+    focus_behavior: False
+    selected_color: "#4a4939"
+    _no_ripple_effect: True
+
+
+MDScreen:
+    MDNavigationLayout:
+        MDScreenManager:
+
+            id: screen_manager
+
+            MDScreen:
+                name: "main"
+                MDTopAppBar:
+                    title: "Mqtt Face"
+                    specific_text_color: "#ffffff"
+                    icon_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]   
+                MDLabel:
+                    text: "This is where I am going to put all of the information on how to use the app and how to navigate around the app."
+                    specific_text_color: "#ffffff"
+                    halign: "center"
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+
+            Camera_Check:
+                name: "capture"
+                #canvas.before:
+                    #PushMatrix
+                    #Rotate:
+                        #angle: -90
+                        #origin: self.center
+                #canvas.after:
+                    #PopMatrix
+
+            MDScreen:
+                name: "listen"
+                MDTopAppBar:
+                    title: "Listen"
+                    specific_text_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    icon_color: "#ffffff"
+                    left_action_items: [["arrow-left", lambda x: app.go_to("main", "right")]]
+                MDLabel:
+                    text: "Subscribe to Mqtt topic here."
+                    specific_text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .85}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "20sp"
+                MDTextField:
+                    id: sub_mqtt_topic
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .75}
+                    size_hint_x: .8
+                    hint_text: "Mqtt Topic"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDTextField:
+                    id: sub_mqtt_payload
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .6}
+                    size_hint_x: .8
+                    hint_text: "Mqtt Payload"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDFloatingActionButton:
+                    icon: "ear-hearing"
+                    icon_color: "#ffffff"
+                    text: "Start Listening"
+                    text_color: "#ffffff"
+                    #halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .45}
+                    size_hint_x: .4
+                    #on_release:
+
+            MDScreen:
+                name: "publish"
+                MDTopAppBar:
+                    title: "Publish"
+                    specific_text_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    icon_color: "#ffffff"
+                    left_action_items: [["arrow-left", lambda x: app.go_to("main", "right")]]
+                MDLabel:
+                    text: "Publish Mqtt topic here."
+                    specific_text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .85}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "20sp"
+                MDTextField:
+                    id: pub_mqtt_topic
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .75}
+                    size_hint_x: .8
+                    hint_text: "Mqtt Topic"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDTextField:
+                    id: pub_mqtt_payload
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .6}
+                    size_hint_x: .8
+                    hint_text: "Mqtt Payload"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDFloatingActionButton:
+                    icon: "email-fast"
+                    icon_color: "#ffffff"
+                    text: "Publish Message"
+                    text_color: "#ffffff"
+                    #halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .45}
+                    size_hint_x: .4
+                    #on_release:
+
+            MDScreen:
+                name: "face"
+                MDTopAppBar:
+                    title: "Choose Face"
+                    specific_text_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    icon_color: "#ffffff"
+                    left_action_items: [["arrow-left", lambda x: app.go_to("main", "right")]]
+                MDLabel:
+                    text: "Pick a Face"
+                    specific_text_color: "#ffffff"
+                    pos_hint: {"center_x": .5, "center_y": .85}
+                    halign: "center"
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                MDGridLayout:
+                    #adaptive_height: True
+                    #md_bg_color: app.theme_cls.primary_color
+                    cols: 3
+                    pos_hint: {"center_x": .5, "center_y": .65}
+                    size_hint: ".35dp", ".35dp"
+                    Image:
+                        radius: 24
+                        source: "assets/icon.png"
+                        #size_hint: None, None
+                        #size: "10dp", "10dp"
+                    Image:
+                        radius: 24
+                        source: "assets/icon.png"
+                        #size_hint: None, None
+                        #size: "10dp", "10dp"
+                        #rotation: 90
+                    Image:
+                        radius: 24
+                        source: "assets/icon.png"
+                        #size_hint: None, None
+                        #size: "10dp", "10dp"                
+                MDLabel:
+                    text: "Make your own Face"
+                    specific_text_color: "#ffffff"
+                    pos_hint: {"center_x": .5, "center_y": .35}
+                    halign: "center"
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                MDFloatingActionButton:
+                    icon: "camera-outline"
+                    icon_color: "#ffffff"
+                    text: "Camera"
+                    text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .25}
+                    size_hint_x: .4
+                    on_release:
+                        #Camera_Check.mod_on_enter()
+                        screen_manager.transition.direction = "up"
+                        screen_manager.current = "capture"
+
+            MDScreen:
+                name: "server"
+                MDTopAppBar:
+                    title: "Configure Server"
+                    specific_text_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    icon_color: "#ffffff"
+                    left_action_items: [["arrow-left", lambda x: app.go_to("main", "right")]]
+                MDLabel:
+                    text: "Enter Mqtt Server information here"
+                    specific_text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .85}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "20sp"                   
+                MDTextField:
+                    id: server_address
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .75}
+                    size_hint_x: .8
+                    hint_text: "Mqtt Server Address"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDTextField:
+                    id: username
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .6}
+                    size_hint_x: .8
+                    hint_text: "Username"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDTextField:
+                    id: password
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .45}
+                    size_hint_x: .8
+                    hint_text: "Password"
+                    helper_text: "Something went wrong"
+                    helper_text_mode: "on_error"
+                    max_text_length: 10
+                    icon_right: "information"
+                MDFloatingActionButton:
+                    icon: "lan-connect"
+                    icon_color: "#ffffff"
+                    text: "Connect"
+                    text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .25}
+                    size_hint_x: .4
+                    #on_release:
+
+            MDScreen:
+                name: "about"
+                MDTopAppBar:
+                    title: "About"
+                    specific_text_color: "#ffffff"
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#4a4939"
+                    icon_color: "#ffffff"
+                    left_action_items: [["arrow-left", lambda x: app.go_to("main", "right")]]
+                MDLabel:
+                    text: "This is where I am going to put all of the information on how to use the app and how to navigate around the app."
+                    specific_text_color: "#ffffff"
+                    halign: "center"
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: 0, dp(16), dp(16), 0
+            MDNavigationDrawerMenu:
+                MDNavigationDrawerHeader:
+                    orientation: "vertical"
+                    padding: "12dp", 0, 0, "16dp"
+                    title: "Mqtt Face"
+                    text: "A Mqtt app"
+                    text_color: "#4a4939"
+                    spacing: "4dp"
+                                         
+                MDNavigationDrawerDivider:
+                    
+                MDNavigationDrawerLabel:
+                    text: "Options"
+                DrawerClickableItem:
+                    icon: "ear-hearing"
+                    text: "Listen"
+                    on_release: 
+                        nav_drawer.set_state("close")
+                        screen_manager.transition.direction = "left"
+                        screen_manager.current = "listen"     
+                DrawerClickableItem:
+                    icon: "email-fast"
+                    text: "Publish"
+                    on_release: 
+                        nav_drawer.set_state("close")
+                        screen_manager.transition.direction = "left"
+                        screen_manager.current = "publish"
+                DrawerClickableItem:
+                    icon: "robot-excited-outline"
+                    text: "Choose Face"
+                    on_release: 
+                        nav_drawer.set_state("close")
+                        screen_manager.transition.direction = "left"
+                        screen_manager.current = "face"
+
+                MDNavigationDrawerDivider:
+
+                MDNavigationDrawerLabel:
+                    text: "Settings"
+                DrawerClickableItem:
+                    icon: "server-network"
+                    text: "Configure Server"
+                    on_release: 
+                        nav_drawer.set_state("close")
+                        screen_manager.transition.direction = "left"
+                        screen_manager.current = "server"     
+                DrawerClickableItem:
+                    icon: "information-outline"
+                    text: "About"
+                    on_release: 
+                        nav_drawer.set_state("close")
+                        screen_manager.transition.direction = "left"
+                        screen_manager.current = "about"
+                                         
+                MDNavigationDrawerDivider:
+                        
+                MDNavigationDrawerLabel:  
+                    text_color: "#4a4939"
+                    icon_color: "#4a4939"       
+                    text: "Made by AnarchKing"
+                    icon: "crown-outline"
+                    

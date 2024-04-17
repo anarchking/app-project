@@ -1,0 +1,3 @@
+title=Mqtt Face
+author=AnarchKing
+orientation=landscape
