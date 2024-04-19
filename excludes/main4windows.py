@@ -52,88 +52,67 @@ class Camera_Check(MDScreen):
     def on_enter(self):
         self.clear_widgets()
         if platform == "android":
-            if check_permission(Permission.CAMERA) == True:
-                cam = Camera(
-                    resolution = (1920, 1080),
-                    play = self.cam_state,
-                    size_hint_y = 2.3,
-                    size_hint_x = 1.75,
-                    pos_hint = {"center_x": .5, "center_y": .5},
-                )
-                
-                cam = self.rotations(cam)
-                self.add_widget(cam)
-                #cam.id = "cam"
-                #layout = self.rotations(layout)
-                #self.add_widget(layout)
-
-                arrow = MDFloatingActionButton(
-                    icon = "arrow-left",
-                    icon_color = "#ffffff",
-                    halign = "center",
-                    pos_hint = {"center_x": .92, "center_y": .90},
-                )
-                arrow = self.rotations(arrow)
-                self.add_widget(arrow)
-
-                icon = MDFloatingActionButton(
-                    icon = "camera-outline",
-                    icon_color = "#ffffff",
-                    halign = "center",
-                    pos_hint = {"center_x": .5, "center_y": .1},
-                    on_release = self.click(),
-                )
-                icon = self.rotations(icon)
-                #icon.bind(on_release = self.click())
-                self.add_widget(icon)
-                '''button = MDFloatingActionButton(
-                    on_release = app.go_to("face", "down"),'''
-            else:
-                
-                '''restart = MDLabel(
+            if check_permission(Permission.CAMERA) == False:
+                restart = MDLabel(
                     text = "Please restart app and grant Camera Permissions.",
                     text_color = "#ffffff",
                     text_size = "100dp",
                     halign = "center",
-                    pos_hint = {"center_x": .5, "center_y": .5},)'''
-                restart = MDFloatingActionButton(
-                    icon = "camera-outline",
-                    icon_color = "#ffffff",
-                    halign = "center",
-                    pos_hint = {"center_x": .1, "center_y": .7},
-                    #md_bg_color = "Blue",
-                    #icon_size = "100dp",
-                    #on_release = MyApp.go_to("face", "down"),
-                )
-                self.add_widget(restart)
-                #layout = self.rotations(layout)
-            return self
-        
+                    pos_hint = {"center_x": .5, "center_y": .5},)
+
+                
+            return self.add_widget(restart)
+
         else:
+
             cam = Camera(
-                resolution = (1920, 1080),
+                #resolution = (1920, 1080),
                 play = self.cam_state,
                 size_hint_y = 2.3,
                 size_hint_x = 1.75,
                 pos_hint = {"center_x": .5, "center_y": .5},
             )
-            return self.add_widget(cam)
+            
+            self.add_widget(cam)
 
-        def rotations(self, wid):
-            with wid.canvas.before:
-                PushMatrix()
-                rotate = Rotate(angle=-90)
-            with wid.canvas.after:
-                PopMatrix()
-            def update_rotate(w, center):
-                rotate.origin = center
-            wid.bind(center=update_rotate)
-            return wid
+            arrow = MDFloatingActionButton(
+                icon = "arrow-left",
+                icon_color = "#ffffff",
+                halign = "center",
+                pos_hint = {"center_x": .92, "center_y": .90},
+            )
+
+            #self.add_widget(arrow)
+
+            icon = MDFloatingActionButton(
+                icon = "camera-outline",
+                icon_color = "#ffffff",
+                halign = "center",
+                pos_hint = {"center_x": .5, "center_y": .1},
+                on_release = self.click(),
+            )
+
+
+            #self.add_widget(icon)   
+
+        return self
     
 
-        def click(self):
-            self.cam_state = not self.cam_state
-            return 
+    def rotations(self, wid):
+        with wid.canvas.before:
+            PushMatrix()
+            rotate = Rotate(angle=-90)
+        with wid.canvas.after:
+            PopMatrix()
+        def update_rotate(w, center):
+            rotate.origin = center
+        wid.bind(center=update_rotate)
+        return wid
+
+
+    def click(self):
+        self.cam_state = not self.cam_state
+        return 
             
 
 
@@ -141,7 +120,6 @@ class MyApp(MDApp):
 
     def build(self):
         self.theme_cls.theme_style = "Dark"
-        return Builder.load_file("screens.kv")
 
 
     def on_resume(self):
@@ -157,9 +135,15 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.transition.direction = transition   
         self.root.ids.screen_manager.current = screen
    
+    '''def save_to_server(self):
+        ip = self.root.ids.server_address.text
+        port = self.ids.port.text
+        username = self.ids.username.text
+        password = self.ids.password.text
+        server_to_db(ip, port, username, password)'''
 
     #def capture(self):
-        '''
+    '''
         Function to capture the images and give them the names
         according to their captured time and date.
         '''
@@ -194,9 +178,9 @@ def main():
     # port number between 0 and 65536
     else:
         return "Not a valid IP Address"
+'''
 
-
-def load_server():
+'''def load_server():
     # get code from cs50 regit project
     db = sqlite3.connect("data.db")
     servers = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 10")   

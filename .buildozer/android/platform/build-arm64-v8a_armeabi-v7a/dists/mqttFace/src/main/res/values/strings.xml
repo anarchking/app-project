@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mqtt Face</string>
+    <string name="private_version">c44accf9834310d0a5ebfb6da817bcef07d13a6c</string>
+    <string name="presplash_color">"silver"</string>
+    <string name="urlScheme">kivy</string>
+</resources>
