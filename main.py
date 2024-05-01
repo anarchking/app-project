@@ -1,9 +1,10 @@
 #__version__ = “2.3.0”
 from kivy.lang import Builder
 from kivy.utils import platform
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, ListProperty
 from kivy.graphics import Canvas, PopMatrix, PushMatrix, Rotate
 from kivy.uix.camera import Camera
+from kivy.core.window import Window
 #from kivy.core.camera import CameraBase
 #from kivy.metrics import dp
 from kivymd.app import MDApp
@@ -16,15 +17,17 @@ from kivymd.uix.navigationdrawer.navigationdrawer import MDNavigationLayout
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
 from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.label.label import MDLabel
+from kivymd.uix.button.button import MDFloatingActionButton
 
 import inspect
 
 from plyer import storagepath, filechooser, camera
 #from camera4kivy import Prewiew
 
-#import paho.mqtt.client as mqtt
-#import sqlite3
-#import re
+import paho.mqtt.client as mqtt
+import sqlite3
+import re
+import time
 from os import listdir
 from os.path import join
 
@@ -35,48 +38,101 @@ if platform == "android":
     PERMISSION = [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE, Permission.CAMERA]
     request_permissions(PERMISSION)
 
-'''
-class ScreenMain(MDScreen):
-    pass
 
-class ScreenListen(MDScreen):
-    pass
+class MyApp(MDApp):
+    def build(self):
+        self.theme_cls.theme_style = "Dark"
+        window = Window.size
 
-class ScreenPublish(MDScreen):
-    pass
+    def on_resume(self):
+        pass
 
-class ScreenFace(MDScreen):
-    pass
+    def on_pause(self):
+        return True
 
-class ScreenServer(MDScreen):
-    pass
+    # function for switching screens
+    def go_to(self, screen, transition): 
+        self.root.ids.screen_manager.transition.direction = transition   
+        self.root.ids.screen_manager.current = screen
+   
+    def save_to_server(self):
+        ip = self.ids.server_address.text
+        port = self.ids.port.text
+        username = self.ids.username.text
+        password = self.ids.password.text
+        if server_to_db(ip, port, username, password) == True:
+            print("True")
+        else:
+            print("False")
+            # load page with inputs converted to labels and a label that says connected with a check mark icon
 
-class ScreenAbout(MDScreen):
-    pass
+    #Function to capture the images and give them the names
+    #according to their captured time and date.
 
-class NaviDrawer(MDNavigationDrawer):
-    pass
-'''
+'''class navigate():
+    def go_to(self, screen, transition): 
+        self.root.ids.screen_manager.transition.direction = transition   
+        self.root.ids.screen_manager.current = screen'''
 
-'''class Cam_Fix(MDFloatLayout):
+
+class FileChoose(MDFloatingActionButton):
+    '''
+    Button that triggers 'filechooser.open_file()' and processes
+    the data response from filechooser Activity.
+    '''
+
+    selection = ListProperty([])
+
+    def choose(self):
+        '''
+        Call plyer filechooser API to run a filechooser Activity.
+        '''
+        if platform == "android":
+            if check_permission(Permission.CAMERA) == False:
+                pass
+        else:
+            filechooser.open_file(on_selection=self.handle_selection)
+
+    def handle_selection(self, selection):
+        '''
+        Callback function for handling the selection response from Activity.
+        '''
+        self.selection = selection
+
+    def on_selection(self, *a, **k):
+        '''
+        Update TextInput.text after FileChoose.selection is changed
+        via FileChoose.handle_selection.
+        '''
+        MDApp.get_running_app().root.ids.result.text = str(self.selection)
+
+
+class Received_msg(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        cam = MDLabel(
-            text = "This is Cam_Fix __init__.",
-            text_color = "#ffffff",
-            text_size = "100dp",
-            halign = "center",
-            pos_hint = {"center_x": .5, "center_y": .5},)
-        #cam = Camera(
-            #id = "camera_id",
-            #resolution = "(1920, 1080)",
-            #size_hint_y = 2.4,
-            #size_hint_x = 1.8,
-            #pos_hint = {"center_x":0.5,"center_y":0.5},      
-            #play = False,
-            #index: 1
-        #)
-        return self.add_widget(cam)'''
+
+
+
+class Server_Button(MDFloatingActionButton):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def press(self):
+        app = MDApp.get_running_app()
+        ip = app.root.ids.ip.text
+        port = app.root.ids.port.text
+        username = app.root.ids.username.text
+        password = app.root.ids.password.text
+        print(ip, port, username, password)
+        if server_to_db(ip, port, username, password):
+            if ip == None:
+                pass
+                #connect_server(ip, port)
+            else:
+                pass
+                #connect_server(ip, port, username, password)
+        else:
+            print("Error Could not save to database.")
 
     
 class Camera_Check(MDScreen):
@@ -94,10 +150,8 @@ class Camera_Check(MDScreen):
         
         return self.layout.add_widget(self.load)
     
-
     def on_enter(self):
         self.clear_widgets()
-        print(self.ids)
         if platform == "android":
             if check_permission(Permission.CAMERA) == False:
                 '''restart = MDLabel(
@@ -113,7 +167,6 @@ class Camera_Check(MDScreen):
                     pos_hint = {"center_x": .1, "center_y": .7},
                     #md_bg_color = "Blue",
                     #icon_size = "100dp",
-                    #on_release = MyApp.go_to("face", "down"),
                 )
                 self.add_widget(self.restart)
                 #layout = self.rotations(layout)
@@ -127,10 +180,8 @@ class Camera_Check(MDScreen):
             size_hint_x = 1.75,
             pos_hint = {"center_x": .5, "center_y": .5},
         )
-        
         self.cam = self.rotations(self.cam)
         self.add_widget(self.cam)
-
 
         self.arrow = MDFloatingActionButton(
             icon = "arrow-left",
@@ -139,7 +190,7 @@ class Camera_Check(MDScreen):
             pos_hint = {"center_x": .92, "center_y": .90},
         )
         self.arrow = self.rotations(self.arrow)
-        #self.click_icon.bind(on_release = self.go_to())
+        self.arrow.bind(on_release = self.go_back)
         self.add_widget(self.arrow)
 
         self.click_icon = MDFloatingActionButton(
@@ -151,9 +202,6 @@ class Camera_Check(MDScreen):
         self.click_icon = self.rotations(self.click_icon)
         self.click_icon.bind(on_release = self.click)
         self.add_widget(self.click_icon)
-        '''button = MDFloatingActionButton(
-            on_release = app.go_to("face", "down"),'''
-
         return self
 
 
@@ -171,48 +219,19 @@ class Camera_Check(MDScreen):
 
     def click(self, instance):
         self.cam.play = not bool(self.cam.play)
-        #self.click_icon.icon = 
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        self.cam.export_to_png("IMG_{}.png".format(timestr))
         return self
         
-
-
-class MyApp(MDApp):
-
-    def build(self):
-        self.theme_cls.theme_style = "Dark"
-
-
-    def on_resume(self):
-        pass
-
-
-    def on_pause(self):
-        return True
-
-
-    # function for switching screens
-    def go_to(self, screen, transition): 
-        self.root.ids.screen_manager.transition.direction = transition   
-        self.root.ids.screen_manager.current = screen
-   
-
-    def save_to_server(self):
-        pass
-        #ip = self.ids.server_address.text
-        #port = self.ids.port.text
-        #username = self.ids.username.text
-        #password = self.ids.password.text
-        #if server_to_db(ip, port, username=None, password=None) == True:
-            # load page with inputs converted to labels and a label that says connected with a check mark icon
-
+    def go_back(self, instance):
+        app = MDApp.get_running_app()
+        app.root.ids.screen_manager.transition.direction = "down"
+        app.root.ids.screen_manager.current = "face"
 
     #def capture(self):
-        '''
-        Function to capture the images and give them the names
-        according to their captured time and date.
-        '''
-        #camera = self.root.ids['camera']
-        #time = datetime.datetime.now()
+        #print(self.root.ids)
+        #camera = self.cam
+
         #timestr = time.strftime("%Y%m%d_%H%M%S")
         #camera.export_to_png("IMG_{}.png".format(timestr))
         #camera.take_picture(filename=filepath, on_complete=self.camera_callback)
@@ -228,30 +247,42 @@ def main():
     #mqttc = connect_server()
 
 
-'''def server_to_db(server_ip, port, username=None, password=None):
-    # get code from cs50 regit project
+def server_to_db(server_ip, port, username=None, password=None):
+    # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
-        if port >= 0 and port <= 65536:
-            db = sqlite3.connect("data.db")
-            db.execute("INSERT INTO server VALUES (?, ?, ?, ?)", server_ip, port, username, password)
-            return True
+        # port number between 0 and 65536
+        if int(port) >= 0 and int(port) <= 65536:
+            if password != None and username == None:
+                try:
+                    db = sqlite3.connect("data.db")
+                    db.execute("INSERT INTO server VALUES (?, ?, ?, ?)", server_ip, port, username, password)
+                    return True
+                except:
+                    print("ERROR in Database")
+                    return False
+            else:
+                print("Please provide a Username with Password")
+                return False
         else:
+            print("Not a valid Port Number")
             return False
+    else:
+        print("Not a valid IP Address") 
+    return False
     
     # true if all was good
     # and false if not a valid ip     
-    # port number between 0 and 65536
-    else:
-        return "Not a valid IP Address"
+    
 
 
+'''
 def load_server():
     # get code from cs50 regit project
     db = sqlite3.connect("data.db")
     servers = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 10")   
     pass
     # return server    
-
+'''
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -275,7 +306,7 @@ def connect_server(server, port):
         pass
     mqttc.loop_forever()
     #return mqttc
-'''
+
 
 
 if __name__ == "__main__":
