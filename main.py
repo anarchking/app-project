@@ -55,24 +55,9 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.transition.direction = transition   
         self.root.ids.screen_manager.current = screen
    
-    def save_to_server(self):
-        ip = self.ids.server_address.text
-        port = self.ids.port.text
-        username = self.ids.username.text
-        password = self.ids.password.text
-        if server_to_db(ip, port, username, password) == True:
-            print("True")
-        else:
-            print("False")
-            # load page with inputs converted to labels and a label that says connected with a check mark icon
 
     #Function to capture the images and give them the names
     #according to their captured time and date.
-
-'''class navigate():
-    def go_to(self, screen, transition): 
-        self.root.ids.screen_manager.transition.direction = transition   
-        self.root.ids.screen_manager.current = screen'''
 
 
 class FileChoose(MDFloatingActionButton):
@@ -80,9 +65,7 @@ class FileChoose(MDFloatingActionButton):
     Button that triggers 'filechooser.open_file()' and processes
     the data response from filechooser Activity.
     '''
-
     selection = ListProperty([])
-
     def choose(self):
         '''
         Call plyer filechooser API to run a filechooser Activity.
@@ -112,20 +95,19 @@ class Received_msg(MDLabel):
         super().__init__(**kwargs)
 
 
-
 class Server_Button(MDFloatingActionButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def press(self):
         app = MDApp.get_running_app()
-        ip = app.root.ids.ip.text
+        server_address = app.root.ids.server_address.text
         port = app.root.ids.port.text
         username = app.root.ids.username.text
         password = app.root.ids.password.text
-        print(ip, port, username, password)
-        if server_to_db(ip, port, username, password):
-            if ip == None:
+        print(server_address, port, username, password)
+        if server_to_db(server_address, port, username, password):
+            if server_address == None:
                 pass
                 #connect_server(ip, port)
             else:
@@ -133,6 +115,7 @@ class Server_Button(MDFloatingActionButton):
                 #connect_server(ip, port, username, password)
         else:
             print("Error Could not save to database.")
+# load page with inputs converted to labels and a label that says connected with a check mark icon
 
     
 class Camera_Check(MDScreen):
@@ -243,25 +226,28 @@ class Camera_Check(MDScreen):
 
 def main():
     MyApp().run()
-    # if server in sql then 
-    #mqttc = connect_server()
 
 
-def server_to_db(server_ip, port, username=None, password=None):
+def server_to_db(server_ip, port, username, password):
     # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
         # port number between 0 and 65536
         if int(port) >= 0 and int(port) <= 65536:
-            if password != None and username == None:
-                try:
-                    db = sqlite3.connect("data.db")
-                    db.execute("INSERT INTO server VALUES (?, ?, ?, ?)", server_ip, port, username, password)
-                    return True
-                except:
-                    print("ERROR in Database")
-                    return False
-            else:
-                print("Please provide a Username with Password")
+            try:
+                conn = sqlite3.connect("data.db")
+                db = conn.cursor()
+                value = [                    
+                    server_ip,   
+                    port,
+                    username,
+                    password
+                    ]
+                db.execute("INSERT INTO servers(server_ip, server_port, mqtt_username, mqtt_password) VALUES (?, ?, ?, ?)", value)
+                conn.commit()
+                conn.close()
+                return True
+            except ValueError:
+                print("ERROR in Database")
                 return False
         else:
             print("Not a valid Port Number")

@@ -70,22 +70,12 @@ MDScreen:
                 MDTextField:
                     id: sub_mqtt_topic
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .75}
+                    pos_hint: {"center_x": .5, "center_y": .73}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
                     helper_text: "Something went wrong"
                     helper_text_mode: "on_error"
-                    max_text_length: 10
-                    icon_right: "information"
-                MDTextField:
-                    id: sub_mqtt_payload
-                    halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .6}
-                    size_hint_x: .8
-                    hint_text: "Mqtt Payload"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    max_text_length: 65535
                     icon_right: "information"
                 MDFloatingActionButton:
                     icon: "ear-hearing"
@@ -93,13 +83,23 @@ MDScreen:
                     text: "Start Listening"
                     text_color: "#ffffff"
                     #halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .50}
+                    pos_hint: {"center_x": .5, "center_y": .55}
                     size_hint_x: .15
                     #on_release:
+                MDLabel:
+                    markup: True
+                    text: "[b]Conect to a server first.        app.root.ids.something.text[b]"
+                    #specific_text_color: "#000000"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .46}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "16sp"
                 MDBoxLayout:
                     size_hint_x: .95
-                    adaptive_height: True
-                    pos_hint: {"center_x": .5, "center_y": .35}
+                    size_hint_y: .40
+                    #adaptive_height: True
+                    pos_hint: {"center_x": .5, "center_y": .22}
                     md_bg_color: "#777777"
                     MDScrollView:
                         Received_msg:
@@ -244,7 +244,7 @@ MDScreen:
                     hint_text: "Server IP Address"
                     #helper_text: "Something went wrong"
                     #helper_text_mode: "on_error"
-                    max_text_length: 12
+                    max_text_length: 15
                     icon_right: "information"
                 MDTextField:
                     id: port
@@ -284,7 +284,7 @@ MDScreen:
                     halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .25}
                     size_hint_x: .3
-                    on_release: self.press
+                    on_release: self.press()
 
             MDScreen:
                 name: "about"
