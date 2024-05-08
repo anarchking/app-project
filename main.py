@@ -10,14 +10,17 @@ from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.widget import Widget
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.screen import MDScreen
+
 from kivymd.uix.navigationdrawer.navigationdrawer import MDNavigationLayout
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
 from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.label.label import MDLabel
-from kivymd.uix.button.button import MDFloatingActionButton
+from kivymd.uix.button.button import MDFloatingActionButton, MDTextButton, MDRectangleFlatButton
 
 import inspect
 
@@ -90,6 +93,18 @@ class FileChoose(MDFloatingActionButton):
         MDApp.get_running_app().root.ids.result.text = str(self.selection)
 
 
+class Last_Server(MDRectangleFlatButton):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.load()
+
+    def load(self):
+        self.text = f"{load_last_server()}"
+        self.theme_text_color = "Custom"
+        self.text_color = "#00ff00"
+        return self
+
+
 class Received_msg(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -105,7 +120,6 @@ class Server_Button(MDFloatingActionButton):
         port = app.root.ids.port.text
         username = app.root.ids.username.text
         password = app.root.ids.password.text
-        print(server_address, port, username, password)
         if server_to_db(server_address, port, username, password):
             if server_address == None:
                 pass
@@ -260,15 +274,17 @@ def server_to_db(server_ip, port, username, password):
     # and false if not a valid ip     
     
 
+def load_last_server():
+    conn = sqlite3.connect("data.db")
+    db = conn.cursor()
+    server = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
+    server = server.fetchall()
+    conn.commit()
+    conn.close()
+    if server == None:
+        return "No saved Servers"
+    return f"Saved Server {server[0][0]} on Port {server[0][1]}"
 
-'''
-def load_server():
-    # get code from cs50 regit project
-    db = sqlite3.connect("data.db")
-    servers = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 10")   
-    pass
-    # return server    
-'''
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
