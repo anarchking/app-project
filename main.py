@@ -45,7 +45,7 @@ if platform == "android":
 class MyApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
-        window = Window.size
+        #window = Window.size
 
     def on_resume(self):
         pass
@@ -120,7 +120,8 @@ class Server_Button(MDFloatingActionButton):
         port = app.root.ids.port.text
         username = app.root.ids.username.text
         password = app.root.ids.password.text
-        if server_to_db(server_address, port, username, password):
+        autostart = app.root.ids.auto_start.active
+        if server_to_db(server_address, port, username, password, autostart):
             if server_address == None:
                 pass
                 #connect_server(ip, port)
@@ -128,7 +129,8 @@ class Server_Button(MDFloatingActionButton):
                 pass
                 #connect_server(ip, port, username, password)
         else:
-            print("Error Could not save to database.")
+            #print("Error Could not save to database.")
+            pass
 # load page with inputs converted to labels and a label that says connected with a check mark icon
 
     
@@ -242,7 +244,7 @@ def main():
     MyApp().run()
 
 
-def server_to_db(server_ip, port, username, password):
+def server_to_db(server_ip, port, username, password, autostart=False):
     # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
         # port number between 0 and 65536
@@ -254,9 +256,10 @@ def server_to_db(server_ip, port, username, password):
                     server_ip,   
                     port,
                     username,
-                    password
+                    password,
+                    autostart
                     ]
-                db.execute("INSERT INTO servers(server_ip, server_port, mqtt_username, mqtt_password) VALUES (?, ?, ?, ?)", value)
+                db.execute("INSERT INTO servers(server_ip, server_port, mqtt_username, mqtt_password, auto_start) VALUES (?, ?, ?, ?, ?)", value)
                 conn.commit()
                 conn.close()
                 return True
@@ -281,9 +284,9 @@ def load_last_server():
     server = server.fetchall()
     conn.commit()
     conn.close()
-    if server == None:
+    if not server or server == None:
         return "No saved Servers"
-    return f"Saved Server {server[0][0]} on Port {server[0][1]}"
+    return f"Connect to Saved Server {server[0][0]} on Port {server[0][1]}?"
 
 
 # The callback for when the client receives a CONNACK response from the server.

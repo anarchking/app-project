@@ -276,6 +276,16 @@ MDScreen:
                     #helper_text_mode: "on_error"
                     max_text_length: 128
                     icon_right: "information"
+                MDLabel:       
+                    text: "Auto Connect on Start of app?"
+                    specific_text_color: "#ffffff"
+                    font_size: "17sp"
+                    halign: "center"
+                    pos_hint: {"center_x": .4, "center_y": .26}
+                MDSwitch:
+                    id: auto_start
+                    pos_hint: {"center_x": .8, "center_y": .25}
+                    width: "40dp"
                 Server_Button:
                     icon: "lan-connect"
                     icon_color: "#ffffff"
