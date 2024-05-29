@@ -8,6 +8,7 @@ from kivy.core.window import Window
 #from kivy.core.camera import CameraBase
 #from kivy.metrics import dp
 from kivymd.app import MDApp
+from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.relativelayout import MDRelativeLayout
@@ -34,6 +35,7 @@ import time
 from os import listdir
 from os.path import join
 
+mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 
 if platform == "android":
@@ -58,6 +60,9 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.transition.direction = transition   
         self.root.ids.screen_manager.current = screen
    
+    def sub(self):
+        #app = MDApp.get_running_app()
+        subscribe_to(self.root.ids.sub_mqtt_topic.text)
 
     #Function to capture the images and give them the names
     #according to their captured time and date.
@@ -103,11 +108,34 @@ class Last_Server(MDRectangleFlatButton):
         self.theme_text_color = "Custom"
         self.text_color = "#00ff00"
         return self
+    
+    def press(self):
+        conn = sqlite3.connect("data.db")
+        db = conn.cursor()
+        server = db.execute("SELECT server_ip, server_port, mqtt_username, mqtt_password FROM servers ORDER BY server_id DESC LIMIT 1")
+        server = server.fetchall()
+        conn.commit()
+        conn.close()
+        if not server[0][2] or server[0][2] == None:
+            # only server and port
+            connect_server(server[0][0], server[0][1])
+        else:
+            # server, port, username, password
+            connect_server(server[0][0], server[0][1], server[0][2], server[0][3])
 
 
-class Received_msg(MDLabel):
+class Server_Status(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        #app = MDApp.get_running_app()
+        if mqttc.is_connected():
+            conn = sqlite3.connect("data.db")
+            db = conn.cursor()
+            server = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
+            server = server.fetchall()
+            self.text = f"[b]Connected to {server[0][0]} on port {server[0][1]}[b]"
+        else:
+            self.text = "No Connection to a Server"
 
 
 class Server_Button(MDFloatingActionButton):
@@ -122,17 +150,36 @@ class Server_Button(MDFloatingActionButton):
         password = app.root.ids.password.text
         autostart = app.root.ids.auto_start.active
         if server_to_db(server_address, port, username, password, autostart):
-            if server_address == None:
-                pass
-                #connect_server(ip, port)
+            if not username or username == None:
+                connect_server(server_address, port)
             else:
-                pass
-                #connect_server(ip, port, username, password)
+                connect_server(server_address, port, username, password)
         else:
             #print("Error Could not save to database.")
             pass
 # load page with inputs converted to labels and a label that says connected with a check mark icon
 
+
+class Listen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    #def on_enter(self):
+        
+
+class Received_Messages(MDScrollView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def add_message(self, new_message):
+        message = MDLabel(
+            text = f"{new_message}",
+            text_color = "#ffffff",
+            text_size = "100dp",
+            halign = "center",
+            pos_hint = {"center_x": .5, "center_y": .5},
+        )
+        return self.add_widgit(message)
     
 class Camera_Check(MDScreen):
     cam_state = BooleanProperty(True)
@@ -272,10 +319,10 @@ def server_to_db(server_ip, port, username, password, autostart=False):
     else:
         print("Not a valid IP Address") 
     return False
-    
+
     # true if all was good
     # and false if not a valid ip     
-    
+
 
 def load_last_server():
     conn = sqlite3.connect("data.db")
@@ -286,7 +333,13 @@ def load_last_server():
     conn.close()
     if not server or server == None:
         return "No saved Servers"
-    return f"Connect to Saved Server {server[0][0]} on Port {server[0][1]}?"
+    return f"Connect to Server {server[0][0]} on Port {server[0][1]}?"
+
+
+def subscribe_to(topic):
+    if mqttc.is_connected():
+        mqttc.subscribe(topic)
+        #mqttc.reconnect() 
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -295,21 +348,27 @@ def on_connect(client, userdata, flags, reason_code, properties):
     # Subscribing in on_connect() means that if we lose the connection and
 
 
+def on_disconnect(client, userdata,rc=0):
+    client.loop_stop()
+
+
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))             
+    Received_Messages.add_message(msg.topic+" "+str(msg.payload))
+    print(msg.topic+" "+str(msg.payload))
         
 
-def connect_server(server, port):
-    mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+def connect_server(server, port, c_username=None, c_password=None):
     mqttc.on_connect = on_connect
     mqttc.on_message = on_message
+    if c_username != None:
+        mqttc.username_pw_set(username=c_username, password=c_password)
     try:
         mqttc.connect(f"{server}", f"{port}")
     except:
         #return snackbar
         pass
-    mqttc.loop_forever()
+    mqttc.loop_start()
     #return mqttc
 
 

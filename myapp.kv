@@ -49,7 +49,7 @@ MDScreen:
                 #canvas.after:
                     #PopMatrix
 
-            MDScreen:
+            Listen:
                 name: "listen"
                 MDTopAppBar:
                     title: "Listen"
@@ -85,10 +85,12 @@ MDScreen:
                     #halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .55}
                     size_hint_x: .15
-                    #on_release:
-                MDLabel:
+                    on_release:
+                        app.sub()
+                Server_Status:
+                    id: server_status
                     markup: True
-                    text: "[b]Conect to a server first.        app.root.ids.something.text[b]"
+                    text: self.text
                     #specific_text_color: "#000000"
                     halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .46}
@@ -101,8 +103,8 @@ MDScreen:
                     #adaptive_height: True
                     pos_hint: {"center_x": .5, "center_y": .22}
                     md_bg_color: "#777777"
-                    MDScrollView:
-                        Received_msg:
+                    Received_Messages:
+                        
 
             MDScreen:
                 name: "publish"
@@ -297,6 +299,7 @@ MDScreen:
                     on_release: self.press()
                 Last_Server:
                     pos_hint: {"center_x": .5, "center_y": .35}
+                    on_release: self.press()
                     
 
             MDScreen:
