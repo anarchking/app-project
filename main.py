@@ -37,6 +37,8 @@ from os.path import join
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
+Current_Server = None
+
 
 if platform == "android":
     from android.permissions import request_permissions, Permission, check_permission # pylint: disable=import-error # type: ignore
@@ -172,14 +174,14 @@ class Received_Messages(MDScrollView):
         super().__init__(**kwargs)
     
     def add_message(self, new_message):
-        message = MDLabel(
+        self.message = MDLabel(
             text = f"{new_message}",
             text_color = "#ffffff",
             text_size = "100dp",
             halign = "center",
             pos_hint = {"center_x": .5, "center_y": .5},
         )
-        return self.add_widgit(message)
+        return self.add_widgit(self.message)
     
 class Camera_Check(MDScreen):
     cam_state = BooleanProperty(True)
@@ -354,21 +356,32 @@ def on_disconnect(client, userdata,rc=0):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    Received_Messages.add_message(msg.topic+" "+str(msg.payload))
+    mess = f"{msg.topic} {str(msg.payload)}"
+    conn = sqlite3.connect("data.db")
+    db = conn.cursor()
+    db.execute(
+        "INSERT INTO sub_messages (message) VALUES(?)",
+        mess
+    )
+    conn.commit()
+    conn.close()
     print(msg.topic+" "+str(msg.payload))
         
 
 def connect_server(server, port, c_username=None, c_password=None):
     mqttc.on_connect = on_connect
     mqttc.on_message = on_message
+    mqttc.on_disconnect = on_disconnect
     if c_username != None:
         mqttc.username_pw_set(username=c_username, password=c_password)
     try:
         mqttc.connect(f"{server}", f"{port}")
     except:
-        #return snackbar
+        #return snackbar?
         pass
     mqttc.loop_start()
+    global Current_Server 
+    Current_Server = server
     #return mqttc
 
 
