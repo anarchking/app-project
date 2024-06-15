@@ -1,33 +1,49 @@
 #__version__ = “2.3.0”
 from kivy.lang import Builder
 from kivy.utils import platform
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, ListProperty
+from kivy.clock import Clock
 from kivy.graphics import Canvas, PopMatrix, PushMatrix, Rotate
 from kivy.uix.camera import Camera
+from kivy.core.window import Window
+from collections import deque
 #from kivy.core.camera import CameraBase
 #from kivy.metrics import dp
 from kivymd.app import MDApp
+from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.stacklayout import MDStackLayout
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.widget import Widget
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.screen import MDScreen
+
 from kivymd.uix.navigationdrawer.navigationdrawer import MDNavigationLayout
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
 from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.label.label import MDLabel
+from kivymd.uix.button.button import MDFloatingActionButton, MDTextButton, MDRectangleFlatButton
 
 import inspect
 
 from plyer import storagepath, filechooser, camera
 #from camera4kivy import Prewiew
 
-#import paho.mqtt.client as mqtt
-#import sqlite3
-#import re
+import paho.mqtt.client as mqtt
+import sqlite3
+import re
+import datetime
 from os import listdir
 from os.path import join
 
+mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
+CURRENT_ID = ""
+CURRENT_SERVER = None
+MESSAGES = []
+q = deque()
 
 
 if platform == "android":
@@ -35,48 +51,150 @@ if platform == "android":
     PERMISSION = [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE, Permission.CAMERA]
     request_permissions(PERMISSION)
 
-'''
-class ScreenMain(MDScreen):
-    pass
 
-class ScreenListen(MDScreen):
-    pass
+class MyApp(MDApp):
+    def build(self):
+        self.theme_cls.theme_style = "Dark"
+        #window = Window.size
 
-class ScreenPublish(MDScreen):
-    pass
+    def on_resume(self):
+        pass
 
-class ScreenFace(MDScreen):
-    pass
+    def on_pause(self):
+        return True
 
-class ScreenServer(MDScreen):
-    pass
+    # function for switching screens
+    def go_to(self, screen, transition): 
+        self.root.ids.screen_manager.transition.direction = transition   
+        self.root.ids.screen_manager.current = screen
+   
+    def sub(self):
+        #app = MDApp.get_running_app()
+        subscribe_to(self.root.ids.sub_mqtt_topic.text)
 
-class ScreenAbout(MDScreen):
-    pass
+    #Function to capture the images and give them the names
+    #according to their captured time and date.
 
-class NaviDrawer(MDNavigationDrawer):
-    pass
-'''
 
-'''class Cam_Fix(MDFloatLayout):
+class FileChoose(MDFloatingActionButton):
+    '''
+    Button that triggers 'filechooser.open_file()' and processes
+    the data response from filechooser Activity.
+    '''
+    selection = ListProperty([])
+    def choose(self):
+        '''
+        Call plyer filechooser API to run a filechooser Activity.
+        '''
+        if platform == "android":
+            if check_permission(Permission.CAMERA) == False:
+                pass
+        else:
+            filechooser.open_file(on_selection=self.handle_selection)
+
+    def handle_selection(self, selection):
+        '''
+        Callback function for handling the selection response from Activity.
+        '''
+        self.selection = selection
+
+    def on_selection(self, *a, **k):
+        '''
+        Update TextInput.text after FileChoose.selection is changed
+        via FileChoose.handle_selection.
+        '''
+        MDApp.get_running_app().root.ids.result.text = str(self.selection)
+
+
+class Last_Server(MDRectangleFlatButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        cam = MDLabel(
-            text = "This is Cam_Fix __init__.",
-            text_color = "#ffffff",
-            text_size = "100dp",
-            halign = "center",
-            pos_hint = {"center_x": .5, "center_y": .5},)
-        #cam = Camera(
-            #id = "camera_id",
-            #resolution = "(1920, 1080)",
-            #size_hint_y = 2.4,
-            #size_hint_x = 1.8,
-            #pos_hint = {"center_x":0.5,"center_y":0.5},      
-            #play = False,
-            #index: 1
-        #)
-        return self.add_widget(cam)'''
+        self.load()
+
+    def load(self):
+        self.text = f"{load_last_server()}"
+        self.theme_text_color = "Custom"
+        self.text_color = "#00ff00"
+        return self
+    
+    def press(self):
+        conn = sqlite3.connect("data.db")
+        db = conn.cursor()
+        server = db.execute("SELECT server_ip, server_port, mqtt_username, mqtt_password FROM servers ORDER BY server_id DESC LIMIT 1")
+        server = server.fetchall()
+        conn.commit()
+        conn.close()
+        if not server[0][2] or server[0][2] == None:
+            # only server and port
+            connect_server(server[0][0], server[0][1])
+        else:
+            # server, port, username, password
+            connect_server(server[0][0], server[0][1], server[0][2], server[0][3])
+
+
+class Server_Status(MDLabel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        #app = MDApp.get_running_app()
+        if mqttc.is_connected():
+            conn = sqlite3.connect("data.db")
+            db = conn.cursor()
+            server = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
+            server = server.fetchall()
+            self.text = f"[b]Connected to {server[0][0]} on port {server[0][1]}[b]"
+        else:
+            self.text = "No Connection to a Server"
+
+
+class Server_Button(MDFloatingActionButton):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def press(self):
+        app = MDApp.get_running_app()
+        server_address = app.root.ids.server_address.text
+        port = app.root.ids.port.text
+        username = app.root.ids.username.text
+        password = app.root.ids.password.text
+        autostart = app.root.ids.auto_start.active
+        if server_to_db(server_address, port, username, password, autostart):
+            if not username or username == None:
+                connect_server(server_address, port)
+            else:
+                connect_server(server_address, port, username, password)
+        else:
+            #print("Error Could not save to database.")
+            pass
+# load page with inputs converted to labels and a label that says connected with a check mark icon
+
+
+class Listen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    #def on_enter(self):
+        
+
+class Received_Messages(MDBoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Clock.schedule_interval(self.add_message, 0.5)
+
+    def add_message(self, instance):
+        if q and q != None:
+            self.message = MDLabel(
+                text = f"{q.pop()}",
+                text_color = "#ffffff",
+                text_size = "100dp",
+                #halign = "center",
+                pos_hint = {"bottom": 1, "left": 1},
+            )
+            self.add_widget(self.message)
+            
+        return self
+    
+    def on_enter(self):
+        pass
 
     
 class Camera_Check(MDScreen):
@@ -94,10 +212,8 @@ class Camera_Check(MDScreen):
         
         return self.layout.add_widget(self.load)
     
-
     def on_enter(self):
         self.clear_widgets()
-        print(self.ids)
         if platform == "android":
             if check_permission(Permission.CAMERA) == False:
                 '''restart = MDLabel(
@@ -113,7 +229,6 @@ class Camera_Check(MDScreen):
                     pos_hint = {"center_x": .1, "center_y": .7},
                     #md_bg_color = "Blue",
                     #icon_size = "100dp",
-                    #on_release = MyApp.go_to("face", "down"),
                 )
                 self.add_widget(self.restart)
                 #layout = self.rotations(layout)
@@ -127,10 +242,8 @@ class Camera_Check(MDScreen):
             size_hint_x = 1.75,
             pos_hint = {"center_x": .5, "center_y": .5},
         )
-        
         self.cam = self.rotations(self.cam)
         self.add_widget(self.cam)
-
 
         self.arrow = MDFloatingActionButton(
             icon = "arrow-left",
@@ -139,7 +252,7 @@ class Camera_Check(MDScreen):
             pos_hint = {"center_x": .92, "center_y": .90},
         )
         self.arrow = self.rotations(self.arrow)
-        #self.click_icon.bind(on_release = self.go_to())
+        self.arrow.bind(on_release = self.go_back)
         self.add_widget(self.arrow)
 
         self.click_icon = MDFloatingActionButton(
@@ -151,9 +264,6 @@ class Camera_Check(MDScreen):
         self.click_icon = self.rotations(self.click_icon)
         self.click_icon.bind(on_release = self.click)
         self.add_widget(self.click_icon)
-        '''button = MDFloatingActionButton(
-            on_release = app.go_to("face", "down"),'''
-
         return self
 
 
@@ -171,48 +281,20 @@ class Camera_Check(MDScreen):
 
     def click(self, instance):
         self.cam.play = not bool(self.cam.play)
-        #self.click_icon.icon = 
+        dt = datetime.datetime.now()
+        time = dt.strftime("%Y%m%d_%H%M%S")
+        self.cam.export_to_png("IMG_{}.png".format(time))
         return self
         
-
-
-class MyApp(MDApp):
-
-    def build(self):
-        self.theme_cls.theme_style = "Dark"
-
-
-    def on_resume(self):
-        pass
-
-
-    def on_pause(self):
-        return True
-
-
-    # function for switching screens
-    def go_to(self, screen, transition): 
-        self.root.ids.screen_manager.transition.direction = transition   
-        self.root.ids.screen_manager.current = screen
-   
-
-    def save_to_server(self):
-        pass
-        #ip = self.ids.server_address.text
-        #port = self.ids.port.text
-        #username = self.ids.username.text
-        #password = self.ids.password.text
-        #if server_to_db(ip, port, username=None, password=None) == True:
-            # load page with inputs converted to labels and a label that says connected with a check mark icon
-
+    def go_back(self, instance):
+        app = MDApp.get_running_app()
+        app.root.ids.screen_manager.transition.direction = "down"
+        app.root.ids.screen_manager.current = "face"
 
     #def capture(self):
-        '''
-        Function to capture the images and give them the names
-        according to their captured time and date.
-        '''
-        #camera = self.root.ids['camera']
-        #time = datetime.datetime.now()
+        #print(self.root.ids)
+        #camera = self.cam
+
         #timestr = time.strftime("%Y%m%d_%H%M%S")
         #camera.export_to_png("IMG_{}.png".format(timestr))
         #camera.take_picture(filename=filepath, on_complete=self.camera_callback)
@@ -224,33 +306,59 @@ class MyApp(MDApp):
 
 def main():
     MyApp().run()
-    # if server in sql then 
-    #mqttc = connect_server()
 
 
-'''def server_to_db(server_ip, port, username=None, password=None):
-    # get code from cs50 regit project
+def server_to_db(server_ip, port, username, password, autostart=False):
+    # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
-        if port >= 0 and port <= 65536:
-            db = sqlite3.connect("data.db")
-            db.execute("INSERT INTO server VALUES (?, ?, ?, ?)", server_ip, port, username, password)
-            return True
+        # port number between 0 and 65536
+        if int(port) >= 0 and int(port) <= 65536:
+            try:
+                conn = sqlite3.connect("data.db")
+                db = conn.cursor()
+                value = [                    
+                    server_ip,   
+                    port,
+                    username,
+                    password,
+                    autostart
+                    ]
+                db.execute("INSERT INTO servers(server_ip, server_port, mqtt_username, mqtt_password, auto_start) VALUES (?, ?, ?, ?, ?)", value)
+                conn.commit()
+                conn.close()
+                return True
+            except ValueError:
+                print("ERROR in Database")
+                return False
         else:
+            print("Not a valid Port Number")
             return False
-    
+    else:
+        print("Not a valid IP Address") 
+    return False
+
     # true if all was good
     # and false if not a valid ip     
-    # port number between 0 and 65536
-    else:
-        return "Not a valid IP Address"
 
 
-def load_server():
-    # get code from cs50 regit project
-    db = sqlite3.connect("data.db")
-    servers = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 10")   
-    pass
-    # return server    
+def load_last_server():
+    conn = sqlite3.connect("data.db")
+    db = conn.cursor()
+    server = db.execute("SELECT server_id, server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
+    server = server.fetchall()
+    conn.commit()
+    conn.close()
+    global CURRENT_ID
+    CURRENT_ID = server[0][0]
+    if not server or server == None:
+        return "No saved Servers"
+    return f"Connect to Server {server[0][1]} on Port {server[0][2]}?"
+
+
+def subscribe_to(topic):
+    if mqttc.is_connected():
+        mqttc.subscribe(topic)
+        #mqttc.reconnect() 
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -259,23 +367,41 @@ def on_connect(client, userdata, flags, reason_code, properties):
     # Subscribing in on_connect() means that if we lose the connection and
 
 
+def on_disconnect(client, userdata,rc=0):
+    client.loop_stop()
+
+
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))             
+    dt = datetime.datetime.now()
+    q.append(f"{msg.topic} {str(msg.payload)}  {dt.strftime('%c')} ")
+    conn = sqlite3.connect("data.db")
+    db = conn.cursor()
+    db.execute(
+        "INSERT INTO sub_messages (server_id, message) VALUES(?, ?)",
+        (CURRENT_ID, msg.topic+" "+str(msg.payload))
+    )
+    conn.commit()
+    conn.close()
+    print(msg.topic+" "+str(msg.payload))
         
 
-def connect_server(server, port):
-    mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+def connect_server(server, port, c_username=None, c_password=None):
     mqttc.on_connect = on_connect
     mqttc.on_message = on_message
+    mqttc.on_disconnect = on_disconnect
+    if c_username != None:
+        mqttc.username_pw_set(username=c_username, password=c_password)
     try:
         mqttc.connect(f"{server}", f"{port}")
     except:
-        #return snackbar
+        #return snackbar?
         pass
-    mqttc.loop_forever()
+    mqttc.loop_start()
+    global CURRENT_SERVER
+    CURRENT_SERVER = server
     #return mqttc
-'''
+
 
 
 if __name__ == "__main__":

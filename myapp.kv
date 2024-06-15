@@ -73,8 +73,8 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .73}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
                     max_text_length: 65535
                     icon_right: "information"
                 MDFloatingActionButton:
@@ -98,14 +98,29 @@ MDScreen:
                     padding: "12dp", 0,"12dp", 0
                     font_size: "16sp"
                 MDBoxLayout:
+                    orientation: "vertical"
                     size_hint_x: .95
                     size_hint_y: .40
-                    #adaptive_height: True
                     pos_hint: {"center_x": .5, "center_y": .22}
-                    md_bg_color: "#777777"
-                    Received_Messages:
-                        id: received_messages
+                    md_bg_color: "#4a4939"
+                    MDScrollView:
+                        Received_Messages:
+                            id: received_messages
+                            text: "really some amazing text and all kinds of other cool stuff for sure big momma \n" * 25
+                            size_hint_y: None
+                            size_hint_x: 1.1
+                            height: self.texture_size[1]
+                            #text_size: self.width, None
+                            width: self.width
+                            padding: 7, 3
+                            theme_text_color: "Custom"
+                            text_color: "#000000"
+                            font_style: "H6"
+                            valign: "top"
+                            halign: "left"
+                            md_bg_color: "#4a4939"
                         
+                    
 
             MDScreen:
                 name: "publish"
@@ -238,11 +253,14 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .85}
                     # padding left, ?, right, ?
                     padding: "12dp", 0,"12dp", 0
-                    font_size: "20sp"                   
+                    font_size: "20sp"
+                Last_Server:
+                    pos_hint: {"center_x": .5, "center_y": .75}
+                    on_release: self.press()        
                 MDTextField:
                     id: server_address
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .75}
+                    pos_hint: {"center_x": .5, "center_y": .65}
                     size_hint_x: .8
                     hint_text: "Server IP Address"
                     #helper_text: "Something went wrong"
@@ -252,7 +270,7 @@ MDScreen:
                 MDTextField:
                     id: port
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .65}
+                    pos_hint: {"center_x": .5, "center_y": .55}
                     size_hint_x: .8
                     hint_text: "Server Port Number"
                     #helper_text: "Something went wrong"
@@ -262,7 +280,7 @@ MDScreen:
                 MDTextField:
                     id: username
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .55}
+                    pos_hint: {"center_x": .5, "center_y": .45}
                     size_hint_x: .8
                     hint_text: "Username"
                     #helper_text: "Something went wrong"
@@ -272,7 +290,7 @@ MDScreen:
                 MDTextField:
                     id: password
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .45}
+                    pos_hint: {"center_x": .5, "center_y": .35}
                     size_hint_x: .8
                     hint_text: "Password"
                     #helper_text: "Something went wrong"
@@ -298,9 +316,7 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .15}
                     size_hint_x: .3
                     on_release: self.press()
-                Last_Server:
-                    pos_hint: {"center_x": .5, "center_y": .35}
-                    on_release: self.press()
+
                     
 
             MDScreen:

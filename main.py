@@ -2,13 +2,16 @@
 from kivy.lang import Builder
 from kivy.utils import platform
 from kivy.properties import BooleanProperty, ListProperty
+from kivy.clock import Clock
 from kivy.graphics import Canvas, PopMatrix, PushMatrix, Rotate
 from kivy.uix.camera import Camera
 from kivy.core.window import Window
+from collections import deque
 #from kivy.core.camera import CameraBase
 #from kivy.metrics import dp
 from kivymd.app import MDApp
 from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.stacklayout import MDStackLayout
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.relativelayout import MDRelativeLayout
@@ -31,13 +34,15 @@ from plyer import storagepath, filechooser, camera
 import paho.mqtt.client as mqtt
 import sqlite3
 import re
-import time
+import datetime
 from os import listdir
 from os.path import join
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
-Current_Server = None
+current_id = ""
+current_server = None
+q = deque()
 
 
 if platform == "android":
@@ -165,23 +170,17 @@ class Server_Button(MDFloatingActionButton):
 class Listen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    
-    #def on_enter(self):
-        
 
-class Received_Messages(MDScrollView):
+
+class Received_Messages(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    
-    def add_message(self, new_message):
-        self.message = MDLabel(
-            text = f"{new_message}",
-            text_color = "#ffffff",
-            text_size = "100dp",
-            halign = "center",
-            pos_hint = {"center_x": .5, "center_y": .5},
-        )
-        return self.add_widgit(self.message)
+        Clock.schedule_interval(self.add_message, 0.5)
+
+    def add_message(self, instance):
+        if q and q != None:
+            self.text = f"{q.pop()}" + "\n" + self.text 
+            
     
 class Camera_Check(MDScreen):
     cam_state = BooleanProperty(True)
@@ -267,8 +266,9 @@ class Camera_Check(MDScreen):
 
     def click(self, instance):
         self.cam.play = not bool(self.cam.play)
-        timestr = time.strftime("%Y%m%d_%H%M%S")
-        self.cam.export_to_png("IMG_{}.png".format(timestr))
+        dt = datetime.datetime.now()
+        time = dt.strftime("%Y%m%d_%H%M%S")
+        self.cam.export_to_png("IMG_{}.png".format(time))
         return self
         
     def go_back(self, instance):
@@ -329,13 +329,15 @@ def server_to_db(server_ip, port, username, password, autostart=False):
 def load_last_server():
     conn = sqlite3.connect("data.db")
     db = conn.cursor()
-    server = db.execute("SELECT server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
+    server = db.execute("SELECT server_id, server_ip, server_port FROM servers ORDER BY server_id DESC LIMIT 1")
     server = server.fetchall()
     conn.commit()
     conn.close()
+    global CURRENT_ID
+    CURRENT_ID = server[0][0]
     if not server or server == None:
         return "No saved Servers"
-    return f"Connect to Server {server[0][0]} on Port {server[0][1]}?"
+    return f"Connect to Server {server[0][1]} on Port {server[0][2]}?"
 
 
 def subscribe_to(topic):
@@ -356,12 +358,13 @@ def on_disconnect(client, userdata,rc=0):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    mess = f"{msg.topic} {str(msg.payload)}"
+    dt = datetime.datetime.now()
+    q.append(f"{msg.topic} {str(msg.payload)}  {dt.strftime('%c')} ")
     conn = sqlite3.connect("data.db")
     db = conn.cursor()
     db.execute(
-        "INSERT INTO sub_messages (message) VALUES(?)",
-        mess
+        "INSERT INTO sub_messages (server_id, message) VALUES(?, ?)",
+        (CURRENT_ID, msg.topic+" "+str(msg.payload))
     )
     conn.commit()
     conn.close()
@@ -380,8 +383,8 @@ def connect_server(server, port, c_username=None, c_password=None):
         #return snackbar?
         pass
     mqttc.loop_start()
-    global Current_Server 
-    Current_Server = server
+    global CURRENT_SERVER
+    CURRENT_SERVER = server
     #return mqttc
 
 

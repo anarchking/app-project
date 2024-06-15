@@ -15,10 +15,11 @@
     _no_ripple_effect: True
 
 
+
 MDScreen:
+    name: "app_screen"
     MDNavigationLayout:
         MDScreenManager:
-
             id: screen_manager
 
             MDScreen:
@@ -48,7 +49,7 @@ MDScreen:
                 #canvas.after:
                     #PopMatrix
 
-            MDScreen:
+            Listen:
                 name: "listen"
                 MDTopAppBar:
                     title: "Listen"
@@ -69,22 +70,12 @@ MDScreen:
                 MDTextField:
                     id: sub_mqtt_topic
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .75}
+                    pos_hint: {"center_x": .5, "center_y": .73}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
                     helper_text: "Something went wrong"
                     helper_text_mode: "on_error"
-                    max_text_length: 10
-                    icon_right: "information"
-                MDTextField:
-                    id: sub_mqtt_payload
-                    halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .6}
-                    size_hint_x: .8
-                    hint_text: "Mqtt Payload"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    max_text_length: 65535
                     icon_right: "information"
                 MDFloatingActionButton:
                     icon: "ear-hearing"
@@ -92,9 +83,31 @@ MDScreen:
                     text: "Start Listening"
                     text_color: "#ffffff"
                     #halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .45}
-                    size_hint_x: .4
-                    #on_release:
+                    pos_hint: {"center_x": .5, "center_y": .55}
+                    size_hint_x: .15
+                    on_release:
+                        app.sub()
+                Server_Status:
+                    id: server_status
+                    markup: True
+                    text: self.text
+                    #specific_text_color: "#000000"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .46}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "16sp"
+                MDBoxLayout:
+                    size_hint_x: .95
+                    size_hint_y: .40
+                    #adaptive_height: True
+                    pos_hint: {"center_x": .5, "center_y": .22}
+                    md_bg_color: "#777777"
+                    MDScrollView:
+                        Received_Messages:
+                            id: received_messages
+                            orientation: "vertical"
+                        
 
             MDScreen:
                 name: "publish"
@@ -141,7 +154,7 @@ MDScreen:
                     text_color: "#ffffff"
                     #halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .45}
-                    size_hint_x: .4
+                    size_hint_x: .15
                     #on_release:
 
             MDScreen:
@@ -182,7 +195,14 @@ MDScreen:
                         radius: 24
                         source: "assets/icon.png"
                         #size_hint: None, None
-                        #size: "10dp", "10dp"                
+                        #size: "10dp", "10dp"  
+                FileChoose:
+                    text: "Select a Photo"
+                    text_color: "#ffffff"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .5}
+                    size_hint_x: .4
+                    on_release: self.choose()
                 MDLabel:
                     text: "Make your own Face"
                     specific_text_color: "#ffffff"
@@ -227,9 +247,9 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .75}
                     size_hint_x: .8
                     hint_text: "Server IP Address"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 15
                     icon_right: "information"
                 MDTextField:
                     id: port
@@ -237,9 +257,9 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .65}
                     size_hint_x: .8
                     hint_text: "Server Port Number"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 5
                     icon_right: "information"
                 MDTextField:
                     id: username
@@ -247,9 +267,9 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .55}
                     size_hint_x: .8
                     hint_text: "Username"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 32
                     icon_right: "information"
                 MDTextField:
                     id: password
@@ -257,19 +277,33 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .45}
                     size_hint_x: .8
                     hint_text: "Password"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 128
                     icon_right: "information"
-                MDFloatingActionButton:
+                MDLabel:       
+                    text: "Auto Connect on Start of app?"
+                    specific_text_color: "#ffffff"
+                    font_size: "17sp"
+                    halign: "center"
+                    pos_hint: {"center_x": .4, "center_y": .26}
+                MDSwitch:
+                    id: auto_start
+                    pos_hint: {"center_x": .8, "center_y": .25}
+                    width: "40dp"
+                Server_Button:
                     icon: "lan-connect"
                     icon_color: "#ffffff"
                     text: "Connect"
                     text_color: "#ffffff"
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .25}
-                    size_hint_x: .4
-                    on_release: app.save_to_server()
+                    pos_hint: {"center_x": .5, "center_y": .15}
+                    size_hint_x: .3
+                    on_release: self.press()
+                Last_Server:
+                    pos_hint: {"center_x": .5, "center_y": .35}
+                    on_release: self.press()
+                    
 
             MDScreen:
                 name: "about"
