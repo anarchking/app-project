@@ -134,7 +134,8 @@ class Last_Server(MDRectangleFlatButton):
 class Server_Status(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #app = MDApp.get_running_app()
+        
+    def load_status(self):
         if mqttc.is_connected():
             conn = sqlite3.connect("data.db")
             db = conn.cursor()
@@ -170,6 +171,11 @@ class Server_Button(MDFloatingActionButton):
 class Listen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+    
+    def on_enter(self):
+        pass
+        #print(self.ids.server_status)
+        #self.ids.server_status.load_status()
 
 
 class Received_Messages(MDLabel):
@@ -179,9 +185,30 @@ class Received_Messages(MDLabel):
 
     def add_message(self, instance):
         if q and q != None:
-            self.text = f"{q.pop()}" + "\n" + self.text 
+            self.text = f"{q.pop()}" + "\n" + "-------------------\n" + self.text
             
+
+class Pub_Button(MDFloatingActionButton):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def press(self):
+        app = MDApp.get_running_app()
+        topic = app.root.ids.pub_mqtt_topic.text
+        payload = app.root.ids.pub_mqtt_payload.text
+        on_publish(topic, payload)
+        dt = datetime.datetime.now()
+        app.root.ids.sent_messages.add_message(f"{topic} {payload}  {dt.strftime('%c')}")
     
+
+class Sent_Messages(MDLabel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def add_message(self, new_pub):
+        self.text = new_pub + "\n" + "-------------------\n" + self.text
+
+
 class Camera_Check(MDScreen):
     cam_state = BooleanProperty(True)
     def __init__(self, **kwargs):
@@ -369,6 +396,10 @@ def on_message(client, userdata, msg):
     conn.commit()
     conn.close()
     print(msg.topic+" "+str(msg.payload))
+
+
+def on_publish(topic, payload):
+    mqttc.publish(topic, payload)
         
 
 def connect_server(server, port, c_username=None, c_password=None):

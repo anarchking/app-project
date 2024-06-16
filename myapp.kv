@@ -104,15 +104,16 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .22}
                     md_bg_color: "#4a4939"
                     MDScrollView:
+                        bar_width: 6
                         Received_Messages:
                             id: received_messages
                             text: "really some amazing text and all kinds of other cool stuff for sure big momma \n" * 25
                             size_hint_y: None
-                            size_hint_x: 1.1
+                            size_hint_x: 2
                             height: self.texture_size[1]
                             #text_size: self.width, None
-                            width: self.width
-                            padding: 7, 3
+                            #width: self.texture_size[0]
+                            #padding: 7, 3
                             theme_text_color: "Custom"
                             text_color: "#000000"
                             font_style: "H6"
@@ -146,9 +147,9 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .75}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 65535
                     icon_right: "information"
                 MDTextField:
                     id: pub_mqtt_payload
@@ -156,11 +157,11 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .6}
                     size_hint_x: .8
                     hint_text: "Mqtt Payload"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 65535
                     icon_right: "information"
-                MDFloatingActionButton:
+                Pub_Button:
                     icon: "email-fast"
                     icon_color: "#ffffff"
                     text: "Publish Message"
@@ -168,7 +169,31 @@ MDScreen:
                     #halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .45}
                     size_hint_x: .15
-                    #on_release:
+                    on_release: self.press()
+                MDBoxLayout:
+                    orientation: "vertical"
+                    size_hint_x: .95
+                    size_hint_y: .37
+                    pos_hint: {"center_x": .5, "center_y": .20}
+                    md_bg_color: "#4a4939"
+                    MDScrollView:
+                        bar_width: 6
+                        Sent_Messages:
+                            id: sent_messages
+                            text: self.text
+                            size_hint_y: None
+                            size_hint_x: 2
+                            height: self.texture_size[1]
+                            #text_size: self.width, None
+                            #width: self.texture_size[0]
+                            #padding: 7, 3
+                            theme_text_color: "Custom"
+                            text_color: "#000000"
+                            font_style: "H6"
+                            valign: "top"
+                            halign: "left"
+                            md_bg_color: "#4a4939"
+                        
 
             MDScreen:
                 name: "face"
