@@ -107,7 +107,7 @@ MDScreen:
                         bar_width: 6
                         Received_Messages:
                             id: received_messages
-                            text: "really some amazing text and all kinds of other cool stuff for sure big momma \n" * 25
+                            text: ""
                             size_hint_y: None
                             size_hint_x: 2
                             height: self.texture_size[1]
@@ -123,7 +123,7 @@ MDScreen:
                         
                     
 
-            MDScreen:
+            Publish:
                 name: "publish"
                 MDTopAppBar:
                     title: "Publish"
@@ -154,7 +154,7 @@ MDScreen:
                 MDTextField:
                     id: pub_mqtt_payload
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .6}
+                    pos_hint: {"center_x": .5, "center_y": .65}
                     size_hint_x: .8
                     hint_text: "Mqtt Payload"
                     #helper_text: "Something went wrong"
@@ -167,9 +167,19 @@ MDScreen:
                     text: "Publish Message"
                     text_color: "#ffffff"
                     #halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .45}
+                    pos_hint: {"center_x": .5, "center_y": .52}
                     size_hint_x: .15
                     on_release: self.press()
+                MDLabel:
+                    id: server_status_pub
+                    markup: True
+                    text: self.text
+                    #specific_text_color: "#000000"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .42}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "16sp"
                 MDBoxLayout:
                     orientation: "vertical"
                     size_hint_x: .95

@@ -119,7 +119,7 @@ class Last_Server(MDRectangleFlatButton):
     def press(self):
         conn = sqlite3.connect("data.db")
         db = conn.cursor()
-        server = db.execute("SELECT server_ip, server_port, mqtt_username, mqtt_password FROM servers ORDER BY server_id DESC LIMIT 1")
+        server = db.execute("SELECT server_ip, server_port, mqtt_username, mqtt_password, server_id FROM servers ORDER BY server_id DESC LIMIT 1")
         server = server.fetchall()
         conn.commit()
         conn.close()
@@ -129,6 +129,8 @@ class Last_Server(MDRectangleFlatButton):
         else:
             # server, port, username, password
             connect_server(server[0][0], server[0][1], server[0][2], server[0][3])
+        global current_id
+        current_id = server[0][4]    
 
 
 class Server_Status(MDLabel):
@@ -173,9 +175,9 @@ class Listen(MDScreen):
         super().__init__(**kwargs)
     
     def on_enter(self):
-        pass
+        app = MDApp.get_running_app()
         #print(self.ids.server_status)
-        #self.ids.server_status.load_status()
+        app.root.ids.server_status.load_status()
 
 
 class Received_Messages(MDLabel):
@@ -187,6 +189,19 @@ class Received_Messages(MDLabel):
         if q and q != None:
             self.text = f"{q.pop()}" + "\n" + "-------------------\n" + self.text
             
+
+class Publish(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def on_enter(self):
+        app = MDApp.get_running_app()
+        #print(self.ids.server_status)
+        if current_server and current_server != None:
+            app.root.ids.server_status_pub.text = f"[b]Connected to {current_server} on port {current_port}[b]"
+        else:
+            app.root.ids.server_status_pub.text = "No Connection to a Server"
+
 
 class Pub_Button(MDFloatingActionButton):
     def __init__(self, **kwargs):
@@ -360,8 +375,6 @@ def load_last_server():
     server = server.fetchall()
     conn.commit()
     conn.close()
-    global CURRENT_ID
-    CURRENT_ID = server[0][0]
     if not server or server == None:
         return "No saved Servers"
     return f"Connect to Server {server[0][1]} on Port {server[0][2]}?"
@@ -391,7 +404,7 @@ def on_message(client, userdata, msg):
     db = conn.cursor()
     db.execute(
         "INSERT INTO sub_messages (server_id, message) VALUES(?, ?)",
-        (CURRENT_ID, msg.topic+" "+str(msg.payload))
+        (current_id, msg.topic+" "+str(msg.payload))
     )
     conn.commit()
     conn.close()
@@ -414,9 +427,10 @@ def connect_server(server, port, c_username=None, c_password=None):
         #return snackbar?
         pass
     mqttc.loop_start()
-    global CURRENT_SERVER
-    CURRENT_SERVER = server
-    #return mqttc
+    global current_server
+    global current_port
+    current_server = server
+    current_port = port
 
 
 
