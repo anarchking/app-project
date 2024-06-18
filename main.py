@@ -26,17 +26,13 @@ from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.label.label import MDLabel
 from kivymd.uix.button.button import MDFloatingActionButton, MDTextButton, MDRectangleFlatButton
 
-import inspect
 
 from plyer import storagepath, filechooser, camera
-#from camera4kivy import Prewiew
 
 import paho.mqtt.client as mqtt
 import sqlite3
 import re
 import datetime
-from os import listdir
-from os.path import join
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
@@ -404,15 +400,22 @@ def on_message(client, userdata, msg):
     db = conn.cursor()
     db.execute(
         "INSERT INTO sub_messages (server_id, message) VALUES(?, ?)",
-        (current_id, msg.topic+" "+str(msg.payload))
+        (current_id, msg.topic + " " + str(msg.payload) + dt.strftime('%c'))
     )
     conn.commit()
     conn.close()
-    print(msg.topic+" "+str(msg.payload))
 
 
 def on_publish(topic, payload):
     mqttc.publish(topic, payload)
+    dt = datetime.datetime.now()
+    conn = sqlite3.connect("data.db")
+    db = conn.cursor()
+    db.execute(
+        "INSERT INTO post_messages (server_id, message) VALUES(?, ?)",
+        (current_id, topic + " " + payload + dt.strftime('%c')))
+    conn.commit()
+    conn.close()
         
 
 def connect_server(server, port, c_username=None, c_password=None):
@@ -426,6 +429,8 @@ def connect_server(server, port, c_username=None, c_password=None):
     except:
         #return snackbar?
         pass
+        #print("Connection to server failed.")
+        
     mqttc.loop_start()
     global current_server
     global current_port
