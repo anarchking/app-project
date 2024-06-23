@@ -1,5 +1,11 @@
 import pytest
-from project import server_to_db, load_last_server, connect_server
+from main import server_to_db, load_last_server, connect_server
+
+
+def main():
+    test_server_to_db()
+    test_load_last_server()
+    test_connect_server()
 
 
 def test_server_to_db():
@@ -18,8 +24,20 @@ def test_server_to_db():
 
 
 def test_load_last_server():
-    assert load_last_server() == 
+    server_to_db("192.168.1.1", "1883")
+    assert load_last_server() == "Connect to Server 192.168.1.1 on Port 1883?"
+    server_to_db("192.168.4.1", "1883")
+    assert load_last_server() == "Connect to Server 192.168.4.1 on Port 1883?"
+    server_to_db("192.168.4.1", "1884")
+    assert load_last_server() == "Connect to Server 192.168.4.1 on Port 1884?"
 
 
- def test_connect_server():
-    assert connect_server() == 
+def test_connect_server():
+    with pytest.raises(ValueError):
+        connect_server("192.168.42.3", "string")
+    with pytest.raises(AttributeError):
+        connect_server("192.168.42.3", "1883", 1234)
+    with pytest.raises(TypeError):
+        connect_server("192.168.42.3", 1883, "username", 1)
+    with pytest.raises(AttributeError):
+        connect_server("192.168.42.3", 1883, 1, "42")

@@ -351,11 +351,11 @@ def main():
 
 
 # method for saving server creds to database
-def server_to_db(server_ip, port, username, password, autostart=False):
+def server_to_db(server_ip, port, username=None, password=None, autostart=False):
     # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
         # port number between 0 and 65536
-        if int(port) >= 0 and int(port) <= 65536:
+        if int(port) >= 1 and int(port) <= 65536:
             try:
                 conn = sqlite3.connect("data.db")
                 db = conn.cursor()
@@ -442,18 +442,14 @@ def on_publish(topic, payload):
         
 
 # method for connecting to the server
-def connect_server(server, port, c_username=None, c_password=None):
+def connect_server(server, port, username=None, password=None):
     mqttc.on_connect = on_connect
     mqttc.on_message = on_message
     mqttc.on_disconnect = on_disconnect
-    if c_username != None:
-        mqttc.username_pw_set(username=c_username, password=c_password)
-    try:
-        mqttc.connect(f"{server}", f"{port}")
-    except:
-        #return snackbar?
-        pass
-        #print("Connection to server failed.")
+    if username != None:
+        mqttc.username_pw_set(username=username, password=password)
+
+    mqttc.connect(server, int(port))
         
     mqttc.loop_start()
     global current_server
