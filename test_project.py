@@ -1,5 +1,5 @@
 import pytest
-from main import server_to_db, load_last_server, connect_server
+from project import server_to_db, load_last_server, connect_server
 
 
 def main():
@@ -36,7 +36,7 @@ def test_load_last_server():
 # test for absurd values
 def test_connect_server():
     with pytest.raises(ValueError):
-        connect_server("192.168.42.3", "string")
+        connect_server("192.168.42.3", "words")
     with pytest.raises(AttributeError):
         connect_server("192.168.42.3", "1883", 1234)
     with pytest.raises(TypeError):

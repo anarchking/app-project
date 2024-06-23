@@ -36,21 +36,24 @@ import datetime
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
+# current servers database id
 current_id = ""
+# the server connected to
 current_server = None
+# a que for messages From Mqtt To App
 q = deque()
 
-
+# ask for android permissions
 if platform == "android":
     from android.permissions import request_permissions, Permission, check_permission # pylint: disable=import-error # type: ignore
     PERMISSION = [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE, Permission.CAMERA]
     request_permissions(PERMISSION)
 
 
+# the Main Class of the app 
 class MyApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
-        #window = Window.size
 
     def on_resume(self):
         pass
@@ -58,19 +61,17 @@ class MyApp(MDApp):
     def on_pause(self):
         return True
 
-    # function for switching screens
+    # method for switching screens
     def go_to(self, screen, transition): 
         self.root.ids.screen_manager.transition.direction = transition   
         self.root.ids.screen_manager.current = screen
-   
+    
+    # app call to subscribe method
     def sub(self):
-        #app = MDApp.get_running_app()
         subscribe_to(self.root.ids.sub_mqtt_topic.text)
 
-    #Function to capture the images and give them the names
-    #according to their captured time and date.
 
-
+# file selection on choose face screen
 class FileChoose(MDFloatingActionButton):
     '''
     Button that triggers 'filechooser.open_file()' and processes
@@ -101,17 +102,20 @@ class FileChoose(MDFloatingActionButton):
         MDApp.get_running_app().root.ids.result.text = str(self.selection)
 
 
+# button at top of server screen that loads last config if one exists
 class Last_Server(MDRectangleFlatButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.load()
 
+    # loads the info to buton text
     def load(self):
         self.text = f"{load_last_server()}"
         self.theme_text_color = "Custom"
         self.text_color = "#00ff00"
         return self
     
+    # when pressed connect with saved info
     def press(self):
         conn = sqlite3.connect("data.db")
         db = conn.cursor()
@@ -129,6 +133,7 @@ class Last_Server(MDRectangleFlatButton):
         current_id = server[0][4]    
 
 
+# label for desplaying connected server info
 class Server_Status(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -144,6 +149,7 @@ class Server_Status(MDLabel):
             self.text = "No Connection to a Server"
 
 
+# Button in server screen for submitting new info 
 class Server_Button(MDFloatingActionButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -166,6 +172,7 @@ class Server_Button(MDFloatingActionButton):
 # load page with inputs converted to labels and a label that says connected with a check mark icon
 
 
+# Listen Screen
 class Listen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -176,6 +183,7 @@ class Listen(MDScreen):
         app.root.ids.server_status.load_status()
 
 
+# Label for incoming Messages
 class Received_Messages(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -186,6 +194,7 @@ class Received_Messages(MDLabel):
             self.text = f"{q.pop()}" + "\n" + "-------------------\n" + self.text
             
 
+# Publish Screen
 class Publish(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -199,6 +208,7 @@ class Publish(MDScreen):
             app.root.ids.server_status_pub.text = "No Connection to a Server"
 
 
+# Button on Publish screen for publishing to the entered topic
 class Pub_Button(MDFloatingActionButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -210,8 +220,9 @@ class Pub_Button(MDFloatingActionButton):
         on_publish(topic, payload)
         dt = datetime.datetime.now()
         app.root.ids.sent_messages.add_message(f"{topic} {payload}  {dt.strftime('%c')}")
-    
 
+
+# Label for Outgoing Messages
 class Sent_Messages(MDLabel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -220,8 +231,10 @@ class Sent_Messages(MDLabel):
         self.text = new_pub + "\n" + "-------------------\n" + self.text
 
 
+# Camera Screen
 class Camera_Check(MDScreen):
     cam_state = BooleanProperty(True)
+    # Dont load camera til permission is checked
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -235,6 +248,7 @@ class Camera_Check(MDScreen):
         
         return self.layout.add_widget(self.load)
     
+    # check permission on entering
     def on_enter(self):
         self.clear_widgets()
         if platform == "android":
@@ -257,7 +271,7 @@ class Camera_Check(MDScreen):
                 #layout = self.rotations(layout)
                 return self
             
-
+        # we have camera permissions
         self.cam = Camera(
             resolution = (1920, 1080),
             play = True,
@@ -268,6 +282,7 @@ class Camera_Check(MDScreen):
         self.cam = self.rotations(self.cam)
         self.add_widget(self.cam)
 
+        # back button
         self.arrow = MDFloatingActionButton(
             icon = "arrow-left",
             icon_color = "#ffffff",
@@ -278,6 +293,7 @@ class Camera_Check(MDScreen):
         self.arrow.bind(on_release = self.go_back)
         self.add_widget(self.arrow)
 
+        # button for taking picture
         self.click_icon = MDFloatingActionButton(
             icon = "camera-outline",
             icon_color = "#ffffff",
@@ -289,7 +305,7 @@ class Camera_Check(MDScreen):
         self.add_widget(self.click_icon)
         return self
 
-
+    # rotation for camera image and icons
     def rotations(self, wid):
         with wid.canvas.before:
             PushMatrix()
@@ -302,13 +318,16 @@ class Camera_Check(MDScreen):
         return wid
   
 
+    #Function to capture the images and give them the names
+    #according to their captured time and date.
     def click(self, instance):
         self.cam.play = not bool(self.cam.play)
         dt = datetime.datetime.now()
         time = dt.strftime("%Y%m%d_%H%M%S")
         self.cam.export_to_png("IMG_{}.png".format(time))
         return self
-        
+    
+    # back button only for camera screen
     def go_back(self, instance):
         app = MDApp.get_running_app()
         app.root.ids.screen_manager.transition.direction = "down"
@@ -326,16 +345,17 @@ class Camera_Check(MDScreen):
         #self.go_to("up", "save_pic")      
          
 
-
+# main loop
 def main():
     MyApp().run()
 
 
-def server_to_db(server_ip, port, username, password, autostart=False):
+# method for saving server creds to database
+def server_to_db(server_ip, port, username=None, password=None, autostart=False):
     # make sure ip address numbers are 0-255
     if re.search(r"^(([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))\.){3}([0-9]|[1-9][0-9]|(1)[0-9][0-9]|(2)([0-5][0-5]|[0-4][0-9]))$", server_ip):
         # port number between 0 and 65536
-        if int(port) >= 0 and int(port) <= 65536:
+        if int(port) >= 1 and int(port) <= 65536:
             try:
                 conn = sqlite3.connect("data.db")
                 db = conn.cursor()
@@ -364,6 +384,7 @@ def server_to_db(server_ip, port, username, password, autostart=False):
     # and false if not a valid ip     
 
 
+# loads last server from database and returns a string
 def load_last_server():
     conn = sqlite3.connect("data.db")
     db = conn.cursor()
@@ -376,6 +397,7 @@ def load_last_server():
     return f"Connect to Server {server[0][1]} on Port {server[0][2]}?"
 
 
+# method for subscribing to Mqtt 
 def subscribe_to(topic):
     if mqttc.is_connected():
         mqttc.subscribe(topic)
@@ -388,6 +410,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     # Subscribing in on_connect() means that if we lose the connection and
 
 
+# on disconnection from mqtt server
 def on_disconnect(client, userdata,rc=0):
     client.loop_stop()
 
@@ -405,10 +428,10 @@ def on_message(client, userdata, msg):
     conn.commit()
     conn.close()
 
-
+# method for publishing Mqtt
 def on_publish(topic, payload):
-    mqttc.publish(topic, payload)
     dt = datetime.datetime.now()
+    mqttc.publish(topic, payload)
     conn = sqlite3.connect("data.db")
     db = conn.cursor()
     db.execute(
@@ -418,25 +441,21 @@ def on_publish(topic, payload):
     conn.close()
         
 
-def connect_server(server, port, c_username=None, c_password=None):
+# method for connecting to the server
+def connect_server(server, port, username=None, password=None):
     mqttc.on_connect = on_connect
     mqttc.on_message = on_message
     mqttc.on_disconnect = on_disconnect
-    if c_username != None:
-        mqttc.username_pw_set(username=c_username, password=c_password)
-    try:
-        mqttc.connect(f"{server}", f"{port}")
-    except:
-        #return snackbar?
-        pass
-        #print("Connection to server failed.")
+    if username != None:
+        mqttc.username_pw_set(username=username, password=password)
+
+    mqttc.connect(server, int(port))
         
     mqttc.loop_start()
     global current_server
     global current_port
     current_server = server
     current_port = port
-
 
 
 if __name__ == "__main__":
