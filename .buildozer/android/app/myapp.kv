@@ -73,8 +73,8 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .73}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
                     max_text_length: 65535
                     icon_right: "information"
                 MDFloatingActionButton:
@@ -98,18 +98,32 @@ MDScreen:
                     padding: "12dp", 0,"12dp", 0
                     font_size: "16sp"
                 MDBoxLayout:
+                    orientation: "vertical"
                     size_hint_x: .95
                     size_hint_y: .40
-                    #adaptive_height: True
                     pos_hint: {"center_x": .5, "center_y": .22}
-                    md_bg_color: "#777777"
+                    md_bg_color: "#4a4939"
                     MDScrollView:
+                        bar_width: 6
                         Received_Messages:
                             id: received_messages
-                            orientation: "vertical"
+                            text: ""
+                            size_hint_y: None
+                            size_hint_x: 2
+                            height: self.texture_size[1]
+                            #text_size: self.width, None
+                            #width: self.texture_size[0]
+                            #padding: 7, 3
+                            theme_text_color: "Custom"
+                            text_color: "#000000"
+                            font_style: "H6"
+                            valign: "top"
+                            halign: "left"
+                            md_bg_color: "#4a4939"
                         
+                    
 
-            MDScreen:
+            Publish:
                 name: "publish"
                 MDTopAppBar:
                     title: "Publish"
@@ -133,34 +147,68 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .75}
                     size_hint_x: .8
                     hint_text: "Mqtt Topic"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 65535
                     icon_right: "information"
                 MDTextField:
                     id: pub_mqtt_payload
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .6}
+                    pos_hint: {"center_x": .5, "center_y": .65}
                     size_hint_x: .8
                     hint_text: "Mqtt Payload"
-                    helper_text: "Something went wrong"
-                    helper_text_mode: "on_error"
-                    max_text_length: 10
+                    #helper_text: "Something went wrong"
+                    #helper_text_mode: "on_error"
+                    max_text_length: 65535
                     icon_right: "information"
-                MDFloatingActionButton:
+                Pub_Button:
                     icon: "email-fast"
                     icon_color: "#ffffff"
                     text: "Publish Message"
                     text_color: "#ffffff"
                     #halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .45}
+                    pos_hint: {"center_x": .5, "center_y": .52}
                     size_hint_x: .15
-                    #on_release:
+                    on_release: self.press()
+                MDLabel:
+                    id: server_status_pub
+                    markup: True
+                    text: self.text
+                    #specific_text_color: "#000000"
+                    halign: "center"
+                    pos_hint: {"center_x": .5, "center_y": .42}
+                    # padding left, ?, right, ?
+                    padding: "12dp", 0,"12dp", 0
+                    font_size: "16sp"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    size_hint_x: .95
+                    size_hint_y: .37
+                    pos_hint: {"center_x": .5, "center_y": .20}
+                    md_bg_color: "#4a4939"
+                    MDScrollView:
+                        bar_width: 6
+                        Sent_Messages:
+                            id: sent_messages
+                            text: self.text
+                            size_hint_y: None
+                            size_hint_x: 2
+                            height: self.texture_size[1]
+                            #text_size: self.width, None
+                            #width: self.texture_size[0]
+                            #padding: 7, 3
+                            theme_text_color: "Custom"
+                            text_color: "#000000"
+                            font_style: "H6"
+                            valign: "top"
+                            halign: "left"
+                            md_bg_color: "#4a4939"
+                        
 
             MDScreen:
                 name: "face"
                 MDTopAppBar:
-                    title: "Choose Face"
+                    title: "Coming Soon"
                     specific_text_color: "#ffffff"
                     elevation: 4
                     pos_hint: {"top": 1}
@@ -240,11 +288,14 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .85}
                     # padding left, ?, right, ?
                     padding: "12dp", 0,"12dp", 0
-                    font_size: "20sp"                   
+                    font_size: "20sp"
+                Last_Server:
+                    pos_hint: {"center_x": .5, "center_y": .75}
+                    on_release: self.press()        
                 MDTextField:
                     id: server_address
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .75}
+                    pos_hint: {"center_x": .5, "center_y": .65}
                     size_hint_x: .8
                     hint_text: "Server IP Address"
                     #helper_text: "Something went wrong"
@@ -254,7 +305,7 @@ MDScreen:
                 MDTextField:
                     id: port
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .65}
+                    pos_hint: {"center_x": .5, "center_y": .55}
                     size_hint_x: .8
                     hint_text: "Server Port Number"
                     #helper_text: "Something went wrong"
@@ -264,7 +315,7 @@ MDScreen:
                 MDTextField:
                     id: username
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .55}
+                    pos_hint: {"center_x": .5, "center_y": .45}
                     size_hint_x: .8
                     hint_text: "Username"
                     #helper_text: "Something went wrong"
@@ -274,7 +325,7 @@ MDScreen:
                 MDTextField:
                     id: password
                     halign: "center"
-                    pos_hint: {"center_x": .5, "center_y": .45}
+                    pos_hint: {"center_x": .5, "center_y": .35}
                     size_hint_x: .8
                     hint_text: "Password"
                     #helper_text: "Something went wrong"
@@ -300,9 +351,7 @@ MDScreen:
                     pos_hint: {"center_x": .5, "center_y": .15}
                     size_hint_x: .3
                     on_release: self.press()
-                Last_Server:
-                    pos_hint: {"center_x": .5, "center_y": .35}
-                    on_release: self.press()
+
                     
 
             MDScreen:
@@ -354,7 +403,7 @@ MDScreen:
                         screen_manager.current = "publish"
                 DrawerClickableItem:
                     icon: "robot-excited-outline"
-                    text: "Choose Face"
+                    text: "Coming Soon"
                     on_release: 
                         nav_drawer.set_state("close")
                         screen_manager.transition.direction = "left"

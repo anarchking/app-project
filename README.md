@@ -56,6 +56,21 @@ The Goal in mind for this project is an application that can:
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+<!-- Files -->
+## File Structure
+Files in this project are as follows:
+* main.py is the App code that runs everything.
+* myapp.kv is the Kivy/KivyMD Style language file. Style attributes can be in .kv file or in main.py, Some styling is in main.py for dynamic values.
+* project.py is a copy of main.py and its only use is to meet CS50P's Final Project Requirements (Buildozer requires the main app code to be named "main.py" and CS50P requires "project.py").
+* test_project.py tests 3 functions in project.py "copy of main" with pytest.
+* data.db is the database file.
+* buildozer.spec is the Application compiler config file. This is where you can change the icon, name, permissions and all kinds of settings. 
+* android.txt is needed by Buildozer for android.
+* requirements.txt is all the required modules/libraries needed for this project.
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 <!-- BUILT WITH -->
 ### Built With

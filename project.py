@@ -110,7 +110,10 @@ class Last_Server(MDRectangleFlatButton):
 
     # loads the info to buton text
     def load(self):
-        self.text = f"{load_last_server()}"
+        if not current_server or current_server == None:
+            self.text = f"{load_last_server()}"
+        else:
+            self.text = f"Connected to {current_server}"
         self.theme_text_color = "Custom"
         self.text_color = "#00ff00"
         return self
@@ -130,7 +133,8 @@ class Last_Server(MDRectangleFlatButton):
             # server, port, username, password
             connect_server(server[0][0], server[0][1], server[0][2], server[0][3])
         global current_id
-        current_id = server[0][4]    
+        current_id = server[0][4]
+        self.load()  
 
 
 # label for desplaying connected server info
@@ -161,15 +165,16 @@ class Server_Button(MDFloatingActionButton):
         username = app.root.ids.username.text
         password = app.root.ids.password.text
         autostart = app.root.ids.auto_start.active
+        print(server_address)
         if server_to_db(server_address, port, username, password, autostart):
             if not username or username == None:
                 connect_server(server_address, port)
             else:
                 connect_server(server_address, port, username, password)
+            app.root.ids.last_server.load()
         else:
-            #print("Error Could not save to database.")
-            pass
-# load page with inputs converted to labels and a label that says connected with a check mark icon
+            print("Error Could not save to database.")
+
 
 
 # Listen Screen
@@ -448,9 +453,10 @@ def connect_server(server, port, username=None, password=None):
     mqttc.on_disconnect = on_disconnect
     if username != None:
         mqttc.username_pw_set(username=username, password=password)
-
-    mqttc.connect(server, int(port))
-        
+    try:
+        mqttc.connect(server, int(port))
+    except:
+        pass
     mqttc.loop_start()
     global current_server
     global current_port

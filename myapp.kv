@@ -250,7 +250,7 @@ MDScreen:
                     halign: "center"
                     pos_hint: {"center_x": .5, "center_y": .5}
                     size_hint_x: .4
-                    on_release: self.choose
+                    on_release: self.choose()
                 MDLabel:
                     text: "Make your own Face"
                     specific_text_color: "#ffffff"
@@ -290,6 +290,7 @@ MDScreen:
                     padding: "12dp", 0,"12dp", 0
                     font_size: "20sp"
                 Last_Server:
+                    id: last_server
                     pos_hint: {"center_x": .5, "center_y": .75}
                     on_release: self.press()        
                 MDTextField:
