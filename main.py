@@ -5,34 +5,21 @@ from kivy.properties import BooleanProperty, ListProperty
 from kivy.clock import Clock
 from kivy.graphics import Canvas, PopMatrix, PushMatrix, Rotate
 from kivy.uix.camera import Camera
-from kivy.core.window import Window
-from collections import deque
-#from kivy.core.camera import CameraBase
-#from kivy.metrics import dp
+
 from kivymd.app import MDApp
-from kivymd.uix.scrollview import MDScrollView
-from kivymd.uix.stacklayout import MDStackLayout
-from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.relativelayout import MDRelativeLayout
-from kivymd.uix.widget import Widget
-from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.screen import MDScreen
-
-from kivymd.uix.navigationdrawer.navigationdrawer import MDNavigationLayout
-from kivymd.uix.navigationdrawer import MDNavigationDrawer
-
-from kivymd.uix.button import MDFloatingActionButton
+from kivymd.uix.button import MDFloatingActionButton, MDFillRoundFlatButton
 from kivymd.uix.label.label import MDLabel
 from kivymd.uix.button.button import MDFloatingActionButton, MDTextButton, MDRectangleFlatButton
 
-
 from plyer import storagepath, filechooser, camera
-
+from collections import deque
 import paho.mqtt.client as mqtt
 import sqlite3
 import re
 import datetime
+
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
@@ -242,15 +229,13 @@ class Camera_Check(MDScreen):
     # Dont load camera til permission is checked
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         self.layout = MDFloatLayout()
         self.load = MDLabel(
-                text = "LOADING",
+                text = "Initiating Camera",
                 text_color = "#ffffff",
                 text_size = "100dp",
                 halign = "center",
                 pos_hint = {"center_x": .5, "center_y": .5},)
-        
         return self.layout.add_widget(self.load)
     
     # check permission on entering
@@ -258,22 +243,33 @@ class Camera_Check(MDScreen):
         self.clear_widgets()
         if platform == "android":
             if check_permission(Permission.CAMERA) == False:
-                '''restart = MDLabel(
-                    text = "Please restart app and grant Camera Permissions.",
+                request_permissions(PERMISSION)
+                self.restart = MDLabel(
+                    text = "Please allow Camera Permissions back-out and then re-enter for this feature.",
                     text_color = "#ffffff",
                     text_size = "100dp",
                     halign = "center",
-                    pos_hint = {"center_x": .5, "center_y": .5},)'''
-                self.restart = MDFloatingActionButton(
-                    icon = "camera-outline",
-                    icon_color = "#ffffff",
-                    halign = "center",
-                    pos_hint = {"center_x": .1, "center_y": .7},
-                    #md_bg_color = "Blue",
-                    #icon_size = "100dp",
+                    pos_hint = {"center_x": .5, "center_y": .5},
                 )
                 self.add_widget(self.restart)
-                #layout = self.rotations(layout)
+                self.backout = MDFillRoundFlatButton(
+                    text = "Go-back",
+                    theme_text_color = "Custom",
+                    md_bg_color = "blue",
+                    halign = "center",
+                    pos_hint = {"center_x": .5, "center_y": .4},
+                )
+                self.backout.bind(on_release = self.go_back)
+                self.add_widget(self.backout)
+                self.perms = MDFillRoundFlatButton(
+                    text = "Allow Permisssions",
+                    theme_text_color = "Custom",
+                    md_bg_color = "blue",
+                    halign = "center",
+                    pos_hint = {"center_x": .5, "center_y": .3},
+                )
+                self.perms.bind(on_release = request_permissions(PERMISSION))
+                self.add_widget(self.perms)
                 return self
             
         # we have camera permissions
